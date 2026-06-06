@@ -298,5 +298,54 @@ CREATE INDEX idx_users_created_at
 ON users(created_at);
 
 
+-- ==========================================
+-- ORGANIZATIONS
+-- ==========================================
+
+CREATE TABLE organizations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    owner_id UUID NOT NULL,
+    plan organization_plan_enum NOT NULL DEFAULT 'FREE',
+    status organization_status_enum NOT NULL DEFAULT 'ACTIVE',
+    currency currency_enum NOT NULL DEFAULT 'INR',
+    timezone VARCHAR(100) NOT NULL DEFAULT 'Asia/Kolkata',
+    logo_url TEXT NULL,
+    gst_number VARCHAR(50) NULL,
+    company_size INTEGER NULL,
+    country VARCHAR(100) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_organizations_owner
+        FOREIGN KEY (owner_id)
+        REFERENCES users(id),
+
+    CONSTRAINT chk_organizations_name_not_empty
+        CHECK (name <> ''),
+
+    CONSTRAINT chk_company_size
+        CHECK (
+            company_size IS NULL
+            OR company_size > 0
+        ),
+
+    CONSTRAINT uq_organization_name_owner
+        UNIQUE(name, owner_id)
+);
+
+CREATE INDEX idx_organizations_owner_id
+ON organizations(owner_id);
+
+CREATE INDEX idx_organizations_plan
+ON organizations(plan);
+
+CREATE INDEX idx_organizations_status
+ON organizations(status);
+
+CREATE INDEX idx_organizations_country
+ON organizations(country);
+
 
 
