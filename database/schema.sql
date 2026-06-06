@@ -600,3 +600,60 @@ ON incomes(income_date);
 CREATE INDEX idx_incomes_income_source
 ON incomes(income_source);
 
+
+-- ==========================================
+-- SUBSCRIPTIONS
+-- ==========================================
+
+CREATE TABLE subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NULL,
+    organization_id UUID NULL,
+    plan subscription_plan_enum NOT NULL,
+    status subscription_status_enum NOT NULL,
+    billing_cycle billing_cycle_enum NOT NULL,
+    provider subscription_provider_enum NOT NULL,
+    provider_subscription_id VARCHAR(255) NULL,
+    start_date DATE NOT NULL,
+    trial_end_date DATE NULL,
+    end_date DATE NOT NULL,
+    auto_renew BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    cancelled_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_subscriptions_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT fk_subscriptions_organization
+        FOREIGN KEY (organization_id)
+        REFERENCES organizations(id),
+
+    CONSTRAINT chk_subscription_owner
+        CHECK (
+            user_id IS NOT NULL
+            OR organization_id IS NOT NULL
+        ),
+
+    CONSTRAINT chk_subscription_dates
+        CHECK (
+            start_date <= end_date
+        )
+);
+
+CREATE INDEX idx_subscriptions_user_id
+ON subscriptions(user_id);
+
+CREATE INDEX idx_subscriptions_organization_id
+ON subscriptions(organization_id);
+
+CREATE INDEX idx_subscriptions_status
+ON subscriptions(status);
+
+CREATE INDEX idx_subscriptions_plan
+ON subscriptions(plan);
+
+CREATE INDEX idx_subscriptions_end_date
+ON subscriptions(end_date);
+
