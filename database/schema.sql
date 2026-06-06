@@ -502,3 +502,41 @@ ON expenses(status);
 CREATE INDEX idx_expenses_payment_method
 ON expenses(payment_method);
 
+-- ==========================================
+-- ATTACHMENTS
+-- ==========================================
+
+CREATE TABLE attachments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    expense_id UUID NOT NULL,
+    uploaded_by UUID NOT NULL,
+    storage_provider storage_provider_enum NOT NULL,
+    file_name VARCHAR(500) NOT NULL,
+    file_type file_type_enum NOT NULL,
+    mime_type VARCHAR(255) NULL,
+    file_size BIGINT NOT NULL,
+    storage_key TEXT NOT NULL,
+    uploaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_attachments_expense
+        FOREIGN KEY (expense_id)
+        REFERENCES expenses(id),
+
+    CONSTRAINT fk_attachments_uploaded_by
+        FOREIGN KEY (uploaded_by)
+        REFERENCES users(id),
+
+    CONSTRAINT chk_attachment_file_size
+        CHECK (file_size > 0)
+);
+
+CREATE INDEX idx_attachments_expense_id
+ON attachments(expense_id);
+
+CREATE INDEX idx_attachments_uploaded_by
+ON attachments(uploaded_by);
+
+CREATE INDEX idx_attachments_storage_provider
+ON attachments(storage_provider);
+
