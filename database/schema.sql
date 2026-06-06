@@ -393,3 +393,45 @@ ON organization_members(role);
 
 CREATE INDEX idx_org_members_status
 ON organization_members(status);
+
+
+-- ==========================================
+-- CATEGORIES
+-- ==========================================
+
+CREATE TABLE categories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    type category_type_enum NOT NULL,
+    icon VARCHAR(255) NULL,
+    color VARCHAR(20) NULL,
+    is_system BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    organization_id UUID NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_categories_organization
+        FOREIGN KEY (organization_id)
+        REFERENCES organizations(id),
+
+    CONSTRAINT chk_category_name_not_empty
+        CHECK (name <> ''),
+
+    CONSTRAINT uq_category_name
+        UNIQUE(name, type, organization_id)
+);
+
+CREATE INDEX idx_categories_type
+ON categories(type);
+
+CREATE INDEX idx_categories_organization_id
+ON categories(organization_id);
+
+CREATE INDEX idx_categories_is_system
+ON categories(is_system);
+
+CREATE INDEX idx_categories_is_active
+ON categories(is_active);
+
