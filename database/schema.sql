@@ -791,3 +791,39 @@ ON budgets(status);
 CREATE INDEX idx_budgets_period
 ON budgets(period);
 
+
+-- ==========================================
+-- AUDIT LOGS
+-- ==========================================
+
+CREATE TABLE audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    action audit_action_enum NOT NULL,
+    entity_type audit_entity_type_enum NOT NULL,
+    entity_id UUID NOT NULL,
+    old_value JSONB NULL,
+    new_value JSONB NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent TEXT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_audit_logs_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+);
+
+
+CREATE INDEX idx_audit_logs_user_id
+ON audit_logs(user_id);
+
+CREATE INDEX idx_audit_logs_entity_type
+ON audit_logs(entity_type);
+
+CREATE INDEX idx_audit_logs_entity_id
+ON audit_logs(entity_id);
+
+CREATE INDEX idx_audit_logs_created_at
+ON audit_logs(created_at);
+
+
