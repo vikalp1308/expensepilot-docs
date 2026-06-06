@@ -435,3 +435,70 @@ ON categories(is_system);
 CREATE INDEX idx_categories_is_active
 ON categories(is_active);
 
+
+-- ==========================================
+-- EXPENSES
+-- ==========================================
+
+CREATE TABLE expenses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    organization_id UUID NULL,
+    category_id UUID NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    currency currency_enum NOT NULL,
+    expense_type expense_type_enum NOT NULL,
+    payment_method payment_method_enum NOT NULL,
+    merchant_name VARCHAR(255) NULL,
+    receipt_number VARCHAR(255) NULL,
+    description TEXT NULL,
+    expense_date DATE NOT NULL,
+    is_reimbursable BOOLEAN NOT NULL DEFAULT FALSE,
+    is_recurring BOOLEAN NOT NULL DEFAULT FALSE,
+    recurring_frequency recurring_frequency_enum NULL,
+    status expense_status_enum NOT NULL DEFAULT 'DRAFT',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_expenses_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT fk_expenses_organization
+        FOREIGN KEY (organization_id)
+        REFERENCES organizations(id),
+
+    CONSTRAINT fk_expenses_category
+        FOREIGN KEY (category_id)
+        REFERENCES categories(id),
+
+    CONSTRAINT chk_expense_amount
+        CHECK (amount > 0),
+
+    CONSTRAINT chk_expense_recurring
+        CHECK (
+            is_recurring = FALSE
+            OR recurring_frequency IS NOT NULL
+        )
+);
+
+
+CREATE INDEX idx_expenses_user_id
+ON expenses(user_id);
+
+CREATE INDEX idx_expenses_organization_id
+ON expenses(organization_id);
+
+CREATE INDEX idx_expenses_category_id
+ON expenses(category_id);
+
+CREATE INDEX idx_expenses_expense_date
+ON expenses(expense_date);
+
+CREATE INDEX idx_expenses_status
+ON expenses(status);
+
+CREATE INDEX idx_expenses_payment_method
+ON expenses(payment_method);
+
