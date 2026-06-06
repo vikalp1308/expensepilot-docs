@@ -540,3 +540,63 @@ ON attachments(uploaded_by);
 CREATE INDEX idx_attachments_storage_provider
 ON attachments(storage_provider);
 
+
+-- ==========================================
+-- INCOMES
+-- ==========================================
+
+CREATE TABLE incomes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    organization_id UUID NULL,
+    category_id UUID NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    currency currency_enum NOT NULL,
+    income_source income_source_enum NOT NULL,
+    source_name VARCHAR(255) NULL,
+    reference_number VARCHAR(255) NULL,
+    description TEXT NULL,
+    income_date DATE NOT NULL,
+    is_recurring BOOLEAN NOT NULL DEFAULT FALSE,
+    recurring_frequency recurring_frequency_enum NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_incomes_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT fk_incomes_organization
+        FOREIGN KEY (organization_id)
+        REFERENCES organizations(id),
+
+    CONSTRAINT fk_incomes_category
+        FOREIGN KEY (category_id)
+        REFERENCES categories(id),
+
+    CONSTRAINT chk_income_amount
+        CHECK (amount > 0),
+
+    CONSTRAINT chk_income_recurring
+        CHECK (
+            is_recurring = FALSE
+            OR recurring_frequency IS NOT NULL
+        )
+);
+
+CREATE INDEX idx_incomes_user_id
+ON incomes(user_id);
+
+CREATE INDEX idx_incomes_organization_id
+ON incomes(organization_id);
+
+CREATE INDEX idx_incomes_category_id
+ON incomes(category_id);
+
+CREATE INDEX idx_incomes_income_date
+ON incomes(income_date);
+
+CREATE INDEX idx_incomes_income_source
+ON incomes(income_source);
+
