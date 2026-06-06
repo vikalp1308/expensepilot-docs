@@ -827,3 +827,41 @@ CREATE INDEX idx_audit_logs_created_at
 ON audit_logs(created_at);
 
 
+-- ==========================================
+-- NOTIFICATIONS
+-- ==========================================
+
+CREATE TABLE notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    type notification_type_enum NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    priority notification_priority_enum NOT NULL DEFAULT 'MEDIUM',
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    read_at TIMESTAMP NULL,
+    metadata JSONB NULL,
+    is_email_sent BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_notifications_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT chk_notification_title
+        CHECK (title <> '')
+);
+
+
+CREATE INDEX idx_notifications_user_id
+ON notifications(user_id);
+
+CREATE INDEX idx_notifications_is_read
+ON notifications(is_read);
+
+CREATE INDEX idx_notifications_type
+ON notifications(type);
+
+CREATE INDEX idx_notifications_created_at
+ON notifications(created_at);
