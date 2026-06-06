@@ -657,3 +657,63 @@ ON subscriptions(plan);
 CREATE INDEX idx_subscriptions_end_date
 ON subscriptions(end_date);
 
+
+-- ==========================================
+-- PAYMENTS
+-- ==========================================
+
+CREATE TABLE payments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    subscription_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    currency currency_enum NOT NULL,
+    status payment_status_enum NOT NULL,
+    provider payment_provider_enum NOT NULL,
+    payment_method payment_method_enum NOT NULL,
+    provider_payment_id VARCHAR(255) NOT NULL,
+    provider_order_id VARCHAR(255) NULL,
+    provider_invoice_id VARCHAR(255) NULL,
+    transaction_reference VARCHAR(255) NULL,
+    invoice_url TEXT NULL,
+    payment_date TIMESTAMP NOT NULL,
+    refund_amount DECIMAL(15,2) NULL,
+    refund_date TIMESTAMP NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_payments_subscription
+        FOREIGN KEY (subscription_id)
+        REFERENCES subscriptions(id),
+
+    CONSTRAINT fk_payments_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT chk_payment_amount
+        CHECK (amount > 0),
+
+    CONSTRAINT chk_refund_amount
+        CHECK (
+            refund_amount IS NULL
+            OR refund_amount >= 0
+        )
+);
+
+
+CREATE INDEX idx_payments_subscription_id
+ON payments(subscription_id);
+
+CREATE INDEX idx_payments_user_id
+ON payments(user_id);
+
+CREATE INDEX idx_payments_status
+ON payments(status);
+
+CREATE INDEX idx_payments_payment_date
+ON payments(payment_date);
+
+CREATE INDEX idx_payments_provider_payment_id
+ON payments(provider_payment_id);
+
+
