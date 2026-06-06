@@ -717,3 +717,77 @@ CREATE INDEX idx_payments_provider_payment_id
 ON payments(provider_payment_id);
 
 
+-- ==========================================
+-- BUDGETS
+-- ==========================================
+
+CREATE TABLE budgets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    organization_id UUID NULL,
+    category_id UUID NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    spent_amount DECIMAL(15,2) NOT NULL DEFAULT 0,
+    remaining_amount DECIMAL(15,2) NOT NULL,
+    period budget_period_enum NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    alert_percentage INTEGER NOT NULL,
+    status budget_status_enum NOT NULL DEFAULT 'ACTIVE',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_budgets_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT fk_budgets_organization
+        FOREIGN KEY (organization_id)
+        REFERENCES organizations(id),
+
+    CONSTRAINT fk_budgets_category
+        FOREIGN KEY (category_id)
+        REFERENCES categories(id),
+
+    CONSTRAINT chk_budget_amount
+        CHECK (amount > 0),
+
+    CONSTRAINT chk_budget_spent
+        CHECK (spent_amount >= 0),
+
+    CONSTRAINT chk_budget_remaining
+        CHECK (remaining_amount >= 0),
+
+    CONSTRAINT chk_budget_alert_percentage
+        CHECK (alert_percentage BETWEEN 1 AND 100),
+
+    CONSTRAINT chk_budget_dates
+        CHECK (start_date <= end_date),
+
+    CONSTRAINT uq_budget_period
+        UNIQUE (
+            user_id,
+            category_id,
+            start_date,
+            end_date
+        )
+);
+
+
+CREATE INDEX idx_budgets_user_id
+ON budgets(user_id);
+
+CREATE INDEX idx_budgets_organization_id
+ON budgets(organization_id);
+
+CREATE INDEX idx_budgets_category_id
+ON budgets(category_id);
+
+CREATE INDEX idx_budgets_status
+ON budgets(status);
+
+CREATE INDEX idx_budgets_period
+ON budgets(period);
+
