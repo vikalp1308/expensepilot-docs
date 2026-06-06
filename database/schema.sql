@@ -348,4 +348,48 @@ CREATE INDEX idx_organizations_country
 ON organizations(country);
 
 
+-- ==========================================
+-- ORGANIZATION MEMBERS
+-- ==========================================
 
+CREATE TABLE organization_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    invited_by UUID NULL,
+    role organization_role_enum NOT NULL,
+    status organization_member_status_enum NOT NULL DEFAULT 'INVITED',
+    invited_at TIMESTAMP NULL,
+    joined_at TIMESTAMP NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_org_members_organization
+        FOREIGN KEY (organization_id)
+        REFERENCES organizations(id),
+
+    CONSTRAINT fk_org_members_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT fk_org_members_invited_by
+        FOREIGN KEY (invited_by)
+        REFERENCES users(id),
+
+    CONSTRAINT uq_org_member
+        UNIQUE (organization_id, user_id)
+);
+
+
+CREATE INDEX idx_org_members_organization_id
+ON organization_members(organization_id);
+
+CREATE INDEX idx_org_members_user_id
+ON organization_members(user_id);
+
+CREATE INDEX idx_org_members_role
+ON organization_members(role);
+
+CREATE INDEX idx_org_members_status
+ON organization_members(status);
