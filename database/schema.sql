@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 -- ==========================================
 -- USERS
 -- ==========================================
@@ -264,6 +266,36 @@ CREATE TYPE notification_priority_enum AS ENUM (
     'HIGH',
     'CRITICAL'
 );
+
+
+-- ==========================================
+-- USERS
+-- ==========================================
+
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    password_hash TEXT NULL,
+    profile_picture_url TEXT NULL,
+    auth_provider auth_provider_enum NOT NULL,
+    status user_status_enum NOT NULL DEFAULT 'ACTIVE',
+    email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    last_login_at TIMESTAMP NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    CONSTRAINT chk_users_email_not_empty
+        CHECK (email <> ''),
+    CONSTRAINT chk_users_name_not_empty
+        CHECK (name <> '')
+);
+
+CREATE INDEX idx_users_status
+ON users(status);
+
+CREATE INDEX idx_users_created_at
+ON users(created_at);
 
 
 
