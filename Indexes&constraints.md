@@ -17,15 +17,26 @@ CHECK(amount > 0)
 CHECK(is_recurring = false OR recurring_frequency IS NOT NULL)
 
 ## categories Table constraints:
-UNIQUE(name, type, organization_id)
 CHECK(name <> '')
 ## categories Table Indexes:
 INDEX(type)
+INDEX(user_id)
 INDEX(organization_id)
+INDEX(parent_category_id)
 INDEX(is_system)
+
+## accounts Table constraints:
+CHECK(name <> '')
+CHECK(last_four IS NULL OR last_four is 4 digits)
+## accounts Table Indexes:
+INDEX(user_id)
+INDEX(type)
+INDEX(is_system)
+INDEX(is_active)
 
 ## expenses Table Indexes:
 INDEX(user_id)
+INDEX(account_id)
 INDEX(category_id)
 INDEX(expense_date)
 INDEX(organization_id)
@@ -62,6 +73,7 @@ CHECK(refund_amount >= 0)
 ## budgets Table Indexes:
 INDEX(user_id)
 INDEX(organization_id)
+INDEX(account_id)
 INDEX(category_id)
 INDEX(status)
 INDEX(start_date, end_date)

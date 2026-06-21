@@ -76,6 +76,16 @@ CREATE TYPE payment_method_enum AS ENUM (
     'OTHER'
 );
 
+CREATE TYPE account_type_enum AS ENUM (
+    'CASH',
+    'BANK_ACCOUNT',
+    'CREDIT_CARD',
+    'DEBIT_CARD',
+    'WALLET',
+    'UPI',
+    'OTHER'
+);
+
 CREATE TYPE expense_status_enum AS ENUM (
     'DRAFT',
     'SUBMITTED',
@@ -407,7 +417,9 @@ CREATE TABLE categories (
     color VARCHAR(20) NULL,
     is_system BOOLEAN NOT NULL DEFAULT FALSE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    user_id UUID NULL,
     organization_id UUID NULL,
+    parent_category_id UUID NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
@@ -416,11 +428,17 @@ CREATE TABLE categories (
         FOREIGN KEY (organization_id)
         REFERENCES organizations(id),
 
+    CONSTRAINT fk_categories_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT fk_categories_parent
+        FOREIGN KEY (parent_category_id)
+        REFERENCES categories(id),
+
     CONSTRAINT chk_category_name_not_empty
         CHECK (name <> ''),
 
-    CONSTRAINT uq_category_name
-        UNIQUE(name, type, organization_id)
 );
 
 CREATE INDEX idx_categories_type
@@ -429,11 +447,60 @@ ON categories(type);
 CREATE INDEX idx_categories_organization_id
 ON categories(organization_id);
 
+CREATE INDEX idx_categories_user_id
+ON categories(user_id);
+
+CREATE INDEX idx_categories_parent_category_id
+ON categories(parent_category_id);
+
 CREATE INDEX idx_categories_is_system
 ON categories(is_system);
 
 CREATE INDEX idx_categories_is_active
 ON categories(is_active);
+
+-- ==========================================
+-- ACCOUNTS
+-- ==========================================
+
+CREATE TABLE accounts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NULL,
+    name VARCHAR(255) NOT NULL,
+    type account_type_enum NOT NULL,
+    institution_name VARCHAR(255) NULL,
+    last_four VARCHAR(4) NULL,
+    opening_balance DECIMAL(15,2) NOT NULL DEFAULT 0,
+    current_balance DECIMAL(15,2) NOT NULL DEFAULT 0,
+    currency currency_enum NOT NULL DEFAULT 'INR',
+    is_system BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_accounts_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT chk_account_name_not_empty
+        CHECK (name <> ''),
+
+    CONSTRAINT chk_account_last_four
+        CHECK (last_four IS NULL OR last_four ~ '^[0-9]{4}$')
+);
+
+CREATE INDEX idx_accounts_user_id
+ON accounts(user_id);
+
+CREATE INDEX idx_accounts_type
+ON accounts(type);
+
+CREATE INDEX idx_accounts_is_system
+ON accounts(is_system);
+
+CREATE INDEX idx_accounts_is_active
+ON accounts(is_active);
 
 
 -- ==========================================
@@ -444,6 +511,7 @@ CREATE TABLE expenses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     organization_id UUID NULL,
+    account_id UUID NULL,
     category_id UUID NOT NULL,
     amount DECIMAL(15,2) NOT NULL,
     currency currency_enum NOT NULL,
@@ -469,6 +537,10 @@ CREATE TABLE expenses (
         FOREIGN KEY (organization_id)
         REFERENCES organizations(id),
 
+    CONSTRAINT fk_expenses_account
+        FOREIGN KEY (account_id)
+        REFERENCES accounts(id),
+
     CONSTRAINT fk_expenses_category
         FOREIGN KEY (category_id)
         REFERENCES categories(id),
@@ -489,6 +561,9 @@ ON expenses(user_id);
 
 CREATE INDEX idx_expenses_organization_id
 ON expenses(organization_id);
+
+CREATE INDEX idx_expenses_account_id
+ON expenses(account_id);
 
 CREATE INDEX idx_expenses_category_id
 ON expenses(category_id);
@@ -549,6 +624,7 @@ CREATE TABLE incomes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     organization_id UUID NULL,
+    account_id UUID NULL,
     category_id UUID NOT NULL,
     amount DECIMAL(15,2) NOT NULL,
     currency currency_enum NOT NULL,
@@ -571,6 +647,10 @@ CREATE TABLE incomes (
         FOREIGN KEY (organization_id)
         REFERENCES organizations(id),
 
+    CONSTRAINT fk_incomes_account
+        FOREIGN KEY (account_id)
+        REFERENCES accounts(id),
+
     CONSTRAINT fk_incomes_category
         FOREIGN KEY (category_id)
         REFERENCES categories(id),
@@ -590,6 +670,9 @@ ON incomes(user_id);
 
 CREATE INDEX idx_incomes_organization_id
 ON incomes(organization_id);
+
+CREATE INDEX idx_incomes_account_id
+ON incomes(account_id);
 
 CREATE INDEX idx_incomes_category_id
 ON incomes(category_id);
